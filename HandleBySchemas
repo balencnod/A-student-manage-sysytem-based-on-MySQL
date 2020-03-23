@@ -1,0 +1,79 @@
+package Main;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet; 
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Scanner;
+
+public class HandleBySchemas {
+	 
+	static final String DB_URL = "jdbc:mysql://localhost:3306/MySQL?useSSL=false&serverTimezone=UTC";
+	static final String USER = "root";
+    static final String PASS = "123456";
+
+	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
+		ShowMenuUsingDatabase();
+	}
+	
+	static void ShowMenuUsingDatabase() throws ClassNotFoundException, SQLException {
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		Connection c = DriverManager.getConnection(DB_URL,USER,PASS);
+		System.out.println("连接成功，获取连接对象： " + c);
+		Statement s = c.createStatement();
+        System.out.println("获取Statement对象： " + s);
+        
+        ResultSet rs = c.getMetaData().getTables(null, null, "SQLHomework2", null);
+        if (!rs.next()) {
+        	s.executeUpdate( "CREATE TABLE SQLHomework2\r\n" + 
+        			"(" + 
+        			"name varchar(255)," + 
+        			"phoneNum varchar(255)" + 
+        			");");
+        	System.out.println("未查询到表，将建立新表");
+        }
+        
+		while(true) {
+			System.out.println("/******************************************************************************/");
+			System.out.println("输入1输入信息，输入2查询信息:");
+			Scanner sc = new Scanner(System.in);
+			int re = sc.nextInt();
+			if(re == 1) {
+				InputInformToSQL(s);
+			}
+			else if(re == 2){
+				SearchInformFromSQL(s);
+			}
+		}
+	}
+	
+	static void InputInformToSQL(Statement s) throws SQLException {//使用表实现,即外模式
+		Scanner sc = new Scanner(System.in);
+		System.out.println("请输入姓名:");
+		String name = "'" + sc.nextLine() + "'";
+		System.out.println("请输入电话号码:");
+		String phoneNum = sc.nextLine();
+		String sql = "INSERT INTO SQLHomework2 VALUES ("+name+","+phoneNum+")";
+		s.executeUpdate(sql);
+		System.out.println("数据已输入");
+	}
+	
+	static void SearchInformFromSQL(Statement s) throws SQLException {//使用视图实现，即模式
+		
+		ResultSet rs = s.executeQuery("SELECT name,phoneNum FROM SQLHomework2View");
+		while(rs.next()){
+			String name = rs.getString("name");
+	        String phoneNum = rs.getString("phoneNum");
+	         
+	        System.out.println("姓名为:" + name);
+			System.out.println("电话号码为:" + phoneNum);
+			System.out.println("");
+	         
+		}
+	    rs.close();
+		
+	}
+
+}
